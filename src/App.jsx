@@ -442,25 +442,14 @@ export default function App() {
       const data = await res.json();
       if (data.insights) {
         setAiInsights(data.insights);
-      } else throw new Error(data.error || "Analysis failed");
-    } catch {
-      const total = stats.total;
-      setAiInsights({
-        overview: `We analyzed ${total.toLocaleString()} live Gaana app reviews. Users struggle most with repetitive recommendations, weak search, and difficulty finding fresh music.`,
-        discoveryQuestions: [
-          { question: "Why do users struggle to discover new music?", answer: "Algorithmic loops, exact-match search, and buried new releases make exploration feel repetitive.", highlights: ["Echo-chamber daily mixes", "Search fails on typos", "New indie artists rarely surfaced"] },
-          { question: "What are the most common frustrations with recommendations?", answer: "Autoplay and daily mixes repeat the same tracks; one accidental playlist can poison future suggestions.", highlights: ["Same 15–20 tracks on loop", "No easy reset after bad signals", "Low novelty vs accuracy"] },
-          { question: "What listening behaviors are users trying to achieve?", answer: "Find fresh regional and indie music, mood-fit listening, and frictionless exploration without pop-up interruptions.", highlights: ["Discover new artists in their language", "Commute and workout contexts", "Premium users expect smarter discovery"] },
-          { question: "What causes users to listen to the same content repeatedly?", answer: "Recommendation bias toward historical plays and trending charts, with weak serendipity controls.", highlights: ["Heavy weight on past listens", "Autoplay defaults to trending", "Language silos limit cross-genre discovery"] },
-          { question: "Which user segments experience different discovery challenges?", answer: "Regional-language listeners, premium subscribers, and multi-language users each hit distinct walls.", highlights: ["Telugu/Tamil/Hindi silos", "Paying users expect zero friction", "Kids-content accidents skew families"] },
-          { question: "What unmet needs emerge consistently across reviews?", answer: "Smarter search, fresh personalized releases, undo for bad recommendations, and visible community playlists.", highlights: ["Typo-tolerant search", "Personalized new-release surfacing", "Quick 'reset my taste' control"] },
-        ],
-        sentimentPct: {
-          positive: Math.round(stats.positive / total * 100),
-          negative: Math.round(stats.negative / total * 100),
-          neutral: Math.round(stats.neutral / total * 100),
-        },
-      });
+      } else {
+        throw new Error(data.error || "Analysis failed");
+      }
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      alert(`AI analysis could not complete: ${err.message || "Unknown error"}. Check that GEMINI_API_KEY is set on the server.`);
+      setPhase("done");
+      return;
     }
     setPhase("done");
   }
