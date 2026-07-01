@@ -315,7 +315,10 @@ export default function App() {
   }
 
   async function fetchScrapePage(sourceId, page, label) {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const isApple = sourceId === "appstore" || sourceId === "appstore_rss";
+    const retries = isApple ? 5 : 3;
+
+    for (let attempt = 0; attempt < retries; attempt++) {
       const res = await fetchApi(`/api/scrape?source=${sourceId}&page=${page}`);
       const data = await res.json();
 
@@ -323,16 +326,16 @@ export default function App() {
         if (page > 1 && /page cannot be greater|no reviews/i.test(data.error || "")) {
           return { stop: true, reviews: [] };
         }
-        if (attempt === 2) throw new Error(data.error || `Failed ${label} page ${page}`);
-        await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+        if (attempt === retries - 1) throw new Error(data.error || `Failed ${label} page ${page}`);
+        await new Promise((r) => setTimeout(r, (isApple ? 1800 : 1200) * (attempt + 1)));
         continue;
       }
 
       if (data.reviews?.length) return { reviews: data.reviews, stop: false };
       if (page > 1) return { stop: true, reviews: [] };
 
-      if (attempt === 2) return { reviews: [], stop: false };
-      await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+      if (attempt === retries - 1) return { reviews: [], stop: false };
+      await new Promise((r) => setTimeout(r, (isApple ? 1800 : 1200) * (attempt + 1)));
     }
 
     return { reviews: [], stop: false };
@@ -515,7 +518,13 @@ export default function App() {
                 <div style={styles.sourceStatus(sourceStatus[label] || "pending")} />
                 <span style={{ color: styles.mutedText, flex: 1 }}>{label}</span>
                 <span style={{ color: styles.faintText, fontSize: 12 }}>
-                  {sourceStatus[label] === "done" ? `✓ ${(sourceCounts[label] || 0).toLocaleString()}` : sourceStatus[label] === "failed" ? "✕ Failed" : sourceStatus[label] === "active" ? "..." : "—"}
+                  {sourceStatus[label] === "done"
+                    ? `✓ ${(sourceCounts[label] || 0).toLocaleString()}`
+                    : sourceStatus[label] === "failed"
+                      ? `✕ ${scrapeErrors[label] || "Failed"}`
+                      : sourceStatus[label] === "active"
+                        ? "..."
+                        : "—"}
                 </span>
               </div>
             ))}

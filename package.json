@@ -3,14 +3,16 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n api,vite -c blue,green \"npm run dev:api\" \"npm run dev:client:wait\"",
+    "stop": "node scripts/stop-dev.js",
+    "dev": "node scripts/stop-dev.js && concurrently -n api,vite -c blue,green \"npm run dev:api\" \"npm run dev:client:wait\"",
     "dev:client": "vite",
     "dev:client:wait": "node scripts/wait-for-api.js && vite",
     "dev:api": "node server/dev-server.js",
     "build": "vite build",
     "preview": "vite preview",
     "test:scrape": "node scripts/test-scrape.js",
-    "test:scrape:full": "node scripts/test-scrape.js --full"
+    "test:scrape:full": "node scripts/test-scrape.js --full",
+    "verify:apple": "node scripts/verify-apple-sources.js"
   },
   "dependencies": {
     "app-store-scraper": "^0.18.0",
